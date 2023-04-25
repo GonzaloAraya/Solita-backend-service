@@ -1,0 +1,48 @@
+version: '3'
+# name: solita-project
+
+services:
+  solita-db:
+    image: mariadb:latest
+    container_name: solita-db
+    environment:
+      MARIADB_ROOT_PASSWORD: solita2023Secret
+      MARIADB_DATABASE: solitaDB
+      MARIADB_USER: seveneleven
+      MARIADB_PASSWORD: solita2023
+    ports:
+      - "3306:3306"
+    volumes:
+      - type: bind
+        source: ./server/mysql_data
+        target: /var/lib/mysql
+    networks:
+      - solita-network
+
+  solita-adminer:
+    image: adminer:latest
+    container_name: solita-adminer
+    ports:
+      - 8000:8080
+    depends_on:
+      - solita-db
+    environment:
+      ADMINER_DEFAULT_SERVER: solita-db
+    networks:
+      - solita-network
+
+  solita-server:
+    image: seveneleven/solita-server
+    build:
+      context: server
+      dockerfile: ./serverDockerFile
+    container_name: solita-server
+    ports:
+      - "8080:8080"
+    depends_on: 
+      - solita-db
+    networks:
+      - solita-network
+
+networks:
+  solita-network:

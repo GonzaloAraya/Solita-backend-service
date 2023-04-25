@@ -1,0 +1,8 @@
+#### Stage 1: Build the Java application
+
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /server
+EXPOSE 6000
+#COPY  /server/*.jar
+ENTRYPOINT ["java", "-jar", "/server/*.jar" ]
+
