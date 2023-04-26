@@ -1,14 +1,21 @@
 package fi.dev.solitadevacademy.controller;
 
+import fi.dev.solitadevacademy.config.model.AuthenticationReq;
+import fi.dev.solitadevacademy.config.model.TokenInfo;
 import fi.dev.solitadevacademy.entity.BikeJourney;
 import fi.dev.solitadevacademy.service.BikeJourneyService;
+import fi.dev.solitadevacademy.service.JwtUtilService;
+import fi.dev.solitadevacademy.service.UsersDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +26,15 @@ import java.util.stream.StreamSupport;
 @RestController
 @RequestMapping("/bikeJourney")
 public class BikeJourneyController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtilService jwtUtilService;
+
+    @Autowired
+    UsersDetailsService usersDetailsService;
 
     @Autowired
     private BikeJourneyService bikeJourneyService;
@@ -33,22 +49,6 @@ public class BikeJourneyController {
     @PostMapping("/private")
     public ResponseEntity<?> create(@RequestBody BikeJourney bikeJourney) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bikeJourneyService.save(bikeJourney));
-    }
-
-    /**
-     * search bikeJourney entry base in the id
-     * @param bikeJourneyId
-     * @return http status response and the bikeJourneyObject
-     */
-    @GetMapping("/private/{id}")
-    public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
-        Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
-        if (!oBikeJourney.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(oBikeJourney);
     }
 
     /**
@@ -93,6 +93,20 @@ public class BikeJourneyController {
     }
 
     /**
+     * search bikeJourney entry base in the id
+     * @param bikeJourneyId
+     * @return http status response and the bikeJourneyObject
+     */
+    @GetMapping("/public/{id}")
+    public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
+        Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
+        if (!oBikeJourney.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(oBikeJourney);
+    }
+
+    /**
      * read all the database entries utilizing pageable
      * @param offset
      * @param size
@@ -105,5 +119,32 @@ public class BikeJourneyController {
         Page<BikeJourney> bikeJourneys = bikeJourneyService.findAll(PageRequest.of(offset, size));
         return bikeJourneys.getContent();
     }
+
+    /**
+     * auth and token generation
+     * @param authenticationReq (user and password from client)
+     * @return
+     */
+    @PostMapping("/public/authenticate")
+    public ResponseEntity<TokenInfo> authenticate(@RequestBody AuthenticationReq authenticationReq) {
+        System.out.println("authenticate user" + authenticationReq.getUser());
+
+        //credentials received from client
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authenticationReq.getUser(),
+                        authenticationReq.getPassword()));
+
+        //get extra information from the client
+        final UserDetails userDetails = usersDetailsService.loadUserByUsername(
+                authenticationReq.getUser());
+
+        final String jwt = jwtUtilService.generateToken(userDetails);
+
+        TokenInfo tokenInfo = new TokenInfo(jwt);
+
+        return ResponseEntity.ok(tokenInfo);
+    }
+
+
 }
 
