@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/api/bikeJourney")
+@RequestMapping("/bikeJourney")
 public class BikeJourneyController {
 
     @Autowired
@@ -29,7 +30,7 @@ public class BikeJourneyController {
      * @param bikeJourney
      * @return http status response
      */
-    @PostMapping
+    @PostMapping("/private")
     public ResponseEntity<?> create(@RequestBody BikeJourney bikeJourney) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bikeJourneyService.save(bikeJourney));
     }
@@ -39,8 +40,10 @@ public class BikeJourneyController {
      * @param bikeJourneyId
      * @return http status response and the bikeJourneyObject
      */
-    @GetMapping("/{id}")
+    @GetMapping("/private/{id}")
     public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -53,8 +56,10 @@ public class BikeJourneyController {
      * @param bikeJourneyId
      * @return http status response
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/private/{id}")
     public ResponseEntity<?> delete(@PathVariable(value = "id") Integer bikeJourneyId) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -69,7 +74,7 @@ public class BikeJourneyController {
      * @param bikeJourneyId
      * @return http status response and the bikeJourneyObject
      */
-    @PutMapping("/{id}")
+    @PutMapping("/private/{id}")
     public ResponseEntity<?> update(@RequestBody BikeJourney bikeJourneyDetails, @PathVariable(value = "id") Integer bikeJourneyId) {
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
@@ -88,25 +93,15 @@ public class BikeJourneyController {
     }
 
     /**
-     * read all the database entries
-     * @return a list as json object
-     */
-    @GetMapping
-    public List<BikeJourney> readAll() {
-        List<BikeJourney> bikeJourneys = StreamSupport
-                .stream(bikeJourneyService.findAll().spliterator(), false)
-                .collect(Collectors.toList());
-        return bikeJourneys;
-    }
-
-    /**
      * read all the database entries utilizing pageable
      * @param offset
      * @param size
      * @return a list as json object
      */
-    @GetMapping("/pag/{offset}/{size}")
+    @GetMapping("/public/pag/{offset}/{size}")
     public List<BikeJourney> readAll(@PathVariable(value = "offset") Integer offset,@PathVariable(value = "size") Integer size) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
         Page<BikeJourney> bikeJourneys = bikeJourneyService.findAll(PageRequest.of(offset, size));
         return bikeJourneys.getContent();
     }

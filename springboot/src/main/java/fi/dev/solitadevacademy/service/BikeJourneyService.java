@@ -17,11 +17,6 @@ public class BikeJourneyService  {
     private BikeJourneyRepository bikeJourneyRepository;
 
     @Transactional(readOnly = true)
-    public Iterable<BikeJourney> findAll() {
-        return bikeJourneyRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
     public Page<BikeJourney> findAll(Pageable pageable) {
         return bikeJourneyRepository.findAll(pageable);
     }
