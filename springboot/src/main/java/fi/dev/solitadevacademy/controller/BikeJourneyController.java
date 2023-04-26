@@ -3,6 +3,9 @@ package fi.dev.solitadevacademy.controller;
 import fi.dev.solitadevacademy.entity.BikeJourney;
 import fi.dev.solitadevacademy.service.BikeJourneyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -94,6 +97,18 @@ public class BikeJourneyController {
                 .stream(bikeJourneyService.findAll().spliterator(), false)
                 .collect(Collectors.toList());
         return bikeJourneys;
+    }
+
+    /**
+     * read all the database entries utilizing pageable
+     * @param offset
+     * @param size
+     * @return a list as json object
+     */
+    @GetMapping("/pag/{offset}/{size}")
+    public List<BikeJourney> readAll(@PathVariable(value = "offset") Integer offset,@PathVariable(value = "size") Integer size) {
+        Page<BikeJourney> bikeJourneys = bikeJourneyService.findAll(PageRequest.of(offset, size));
+        return bikeJourneys.getContent();
     }
 }
 

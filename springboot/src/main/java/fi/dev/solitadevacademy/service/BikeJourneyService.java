@@ -41,4 +41,3 @@ public class BikeJourneyService  {
         bikeJourneyRepository.deleteById(Id);
     }
 }
-
