@@ -21,13 +21,21 @@ public class BikeJourneyController {
 
     //*********CRUD********
 
-    //create a new user
+    /**
+     * create a new database entry, body follow bikeJourney entity structure as Json format
+     * @param bikeJourney
+     * @return http status response
+     */
     @PostMapping
     public ResponseEntity<?> create(@RequestBody BikeJourney bikeJourney) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bikeJourneyService.save(bikeJourney));
     }
 
-    //read a user
+    /**
+     * search bikeJourney entry base in the id
+     * @param bikeJourneyId
+     * @return http status response and the bikeJourneyObject
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
@@ -37,19 +45,49 @@ public class BikeJourneyController {
         return ResponseEntity.ok(oBikeJourney);
     }
 
-    //delete user
+    /**
+     * delete a user from the database
+     * @param bikeJourneyId
+     * @return http status response
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(value = "id") Integer bikeJourneyId) {
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-
         bikeJourneyService.deleteById(bikeJourneyId);
         return ResponseEntity.ok().build();
     }
 
-    //read all
+    /**
+     * update an existing database entry, details follow bikeJourney entity structure as Json format
+     * @param bikeJourneyDetails
+     * @param bikeJourneyId
+     * @return http status response and the bikeJourneyObject
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@RequestBody BikeJourney bikeJourneyDetails, @PathVariable(value = "id") Integer bikeJourneyId) {
+        Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
+        if (!oBikeJourney.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        oBikeJourney.get().setId(bikeJourneyDetails.getId());
+        oBikeJourney.get().setDeparture(bikeJourneyDetails.getDeparture());
+        oBikeJourney.get().set_return(bikeJourneyDetails.get_return());
+        oBikeJourney.get().setDepartureStationId(bikeJourneyDetails.getDepartureStationId());
+        oBikeJourney.get().setDepartureStationName(bikeJourneyDetails.getDepartureStationName());
+        oBikeJourney.get().setReturnStationId(bikeJourneyDetails.getReturnStationId());
+        oBikeJourney.get().setReturnStationName(bikeJourneyDetails.getReturnStationName());
+        oBikeJourney.get().setCoveredDistance(bikeJourneyDetails.getCoveredDistance());
+        oBikeJourney.get().setDuration(bikeJourneyDetails.getDuration());
+        return ResponseEntity.status(HttpStatus.CREATED).body(bikeJourneyService.save(oBikeJourney.get()));
+    }
+
+    /**
+     * read all the database entries
+     * @return a list as json object
+     */
     @GetMapping
     public List<BikeJourney> readAll() {
         List<BikeJourney> bikeJourneys = StreamSupport
