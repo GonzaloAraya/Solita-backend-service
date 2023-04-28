@@ -1,13 +1,21 @@
 package fi.dev.solitadevacademy.controller;
 
+import fi.dev.solitadevacademy.config.model.AuthenticationReq;
+import fi.dev.solitadevacademy.config.model.TokenInfo;
 import fi.dev.solitadevacademy.entity.BikeJourney;
 import fi.dev.solitadevacademy.service.BikeJourneyService;
+import fi.dev.solitadevacademy.service.JwtUtilService;
+import fi.dev.solitadevacademy.service.UsersDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,8 +24,17 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/api/bikeJourney")
+@RequestMapping("/bikeJourney")
 public class BikeJourneyController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtilService jwtUtilService;
+
+    @Autowired
+    UsersDetailsService usersDetailsService;
 
     @Autowired
     private BikeJourneyService bikeJourneyService;
@@ -29,23 +46,9 @@ public class BikeJourneyController {
      * @param bikeJourney
      * @return http status response
      */
-    @PostMapping
+    @PostMapping("/private")
     public ResponseEntity<?> create(@RequestBody BikeJourney bikeJourney) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bikeJourneyService.save(bikeJourney));
-    }
-
-    /**
-     * search bikeJourney entry base in the id
-     * @param bikeJourneyId
-     * @return http status response and the bikeJourneyObject
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
-        Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
-        if (!oBikeJourney.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(oBikeJourney);
     }
 
     /**
@@ -53,8 +56,10 @@ public class BikeJourneyController {
      * @param bikeJourneyId
      * @return http status response
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/private/{id}")
     public ResponseEntity<?> delete(@PathVariable(value = "id") Integer bikeJourneyId) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -69,7 +74,7 @@ public class BikeJourneyController {
      * @param bikeJourneyId
      * @return http status response and the bikeJourneyObject
      */
-    @PutMapping("/{id}")
+    @PutMapping("/private/{id}")
     public ResponseEntity<?> update(@RequestBody BikeJourney bikeJourneyDetails, @PathVariable(value = "id") Integer bikeJourneyId) {
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
@@ -88,15 +93,17 @@ public class BikeJourneyController {
     }
 
     /**
-     * read all the database entries
-     * @return a list as json object
+     * search bikeJourney entry base in the id
+     * @param bikeJourneyId
+     * @return http status response and the bikeJourneyObject
      */
-    @GetMapping
-    public List<BikeJourney> readAll() {
-        List<BikeJourney> bikeJourneys = StreamSupport
-                .stream(bikeJourneyService.findAll().spliterator(), false)
-                .collect(Collectors.toList());
-        return bikeJourneys;
+    @GetMapping("/public/{id}")
+    public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
+        Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
+        if (!oBikeJourney.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(oBikeJourney);
     }
 
     /**
@@ -105,10 +112,39 @@ public class BikeJourneyController {
      * @param size
      * @return a list as json object
      */
-    @GetMapping("/pag/{offset}/{size}")
+    @GetMapping("/public/pag/{offset}/{size}")
     public List<BikeJourney> readAll(@PathVariable(value = "offset") Integer offset,@PathVariable(value = "size") Integer size) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
         Page<BikeJourney> bikeJourneys = bikeJourneyService.findAll(PageRequest.of(offset, size));
         return bikeJourneys.getContent();
     }
+
+    /**
+     * auth and token generation
+     * @param authenticationReq (user and password from client)
+     * @return
+     */
+    @PostMapping("/public/authenticate")
+    public ResponseEntity<TokenInfo> authenticate(@RequestBody AuthenticationReq authenticationReq) {
+        System.out.println("authenticate user" + authenticationReq.getUser());
+
+        //credentials received from client
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authenticationReq.getUser(),
+                        authenticationReq.getPassword()));
+
+        //get extra information from the client
+        final UserDetails userDetails = usersDetailsService.loadUserByUsername(
+                authenticationReq.getUser());
+
+        final String jwt = jwtUtilService.generateToken(userDetails);
+
+        TokenInfo tokenInfo = new TokenInfo(jwt);
+
+        return ResponseEntity.ok(tokenInfo);
+    }
+
+
 }
 
