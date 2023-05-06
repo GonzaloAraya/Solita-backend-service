@@ -115,15 +115,23 @@ public class BikeJourneyController {
     @GetMapping("/public/pag/{offset}/{size}")
     public List<BikeJourney> readAll(@PathVariable(value = "offset") Integer offset,@PathVariable(value = "size") Integer size) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
         Page<BikeJourney> bikeJourneys = bikeJourneyService.findAll(PageRequest.of(offset, size));
         return bikeJourneys.getContent();
     }
 
     /**
+     * The average distance of a journey starting from the station or ending at the station
+     * @return a string with the average distance
+     */
+    @GetMapping("/public/average/{location}/{place}")
+    public String average(@PathVariable(value = "location") String location,@PathVariable(value = "place") String place) {
+        return bikeJourneyService.average(location, place);
+    }
+
+    /**
      * auth and token generation
      * @param authenticationReq (user and password from client)
-     * @return
+     * @return generated token information
      */
     @PostMapping("/public/authenticate")
     public ResponseEntity<TokenInfo> authenticate(@RequestBody AuthenticationReq authenticationReq) {
