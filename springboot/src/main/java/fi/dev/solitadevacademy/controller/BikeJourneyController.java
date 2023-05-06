@@ -9,7 +9,6 @@ import fi.dev.solitadevacademy.service.UsersDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,11 +19,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/bikeJourney")
+@CrossOrigin(origins = "http://localhost:3000")
 public class BikeJourneyController {
 
     @Autowired
@@ -47,6 +45,7 @@ public class BikeJourneyController {
      * @return http status response
      */
     @PostMapping("/private")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<?> create(@RequestBody BikeJourney bikeJourney) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bikeJourneyService.save(bikeJourney));
     }
@@ -57,6 +56,7 @@ public class BikeJourneyController {
      * @return http status response
      */
     @DeleteMapping("/private/{id}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<?> delete(@PathVariable(value = "id") Integer bikeJourneyId) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("--->" + auth.getPrincipal() + "--->" + auth.getAuthorities() + ".----" + auth.isAuthenticated());
@@ -75,6 +75,7 @@ public class BikeJourneyController {
      * @return http status response and the bikeJourneyObject
      */
     @PutMapping("/private/{id}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<?> update(@RequestBody BikeJourney bikeJourneyDetails, @PathVariable(value = "id") Integer bikeJourneyId) {
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
@@ -98,6 +99,7 @@ public class BikeJourneyController {
      * @return http status response and the bikeJourneyObject
      */
     @GetMapping("/public/{id}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<?> read(@PathVariable(value = "id") Integer bikeJourneyId) {
         Optional<BikeJourney> oBikeJourney = bikeJourneyService.findById(bikeJourneyId);
         if (!oBikeJourney.isPresent()) {
@@ -113,6 +115,7 @@ public class BikeJourneyController {
      * @return a list as json object
      */
     @GetMapping("/public/pag/{offset}/{size}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public List<BikeJourney> readAll(@PathVariable(value = "offset") Integer offset,@PathVariable(value = "size") Integer size) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         Page<BikeJourney> bikeJourneys = bikeJourneyService.findAll(PageRequest.of(offset, size));
@@ -124,43 +127,31 @@ public class BikeJourneyController {
      * @return a string with the average distance
      */
     @GetMapping("/public/average/{location}/{place}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public String average(@PathVariable(value = "location") String location,@PathVariable(value = "place") String place) {
         return bikeJourneyService.average(location, place);
     }
 
-
-
-
-
-
-    /*
-     *
-     *Top 5 most popular return stations for journeys starting from the station
-     *Top 5 most popular departure stations for journeys ending at the station
-     *
-     *
-     * */
-
+    /**
+     * Top 5 most popular return stations for journeys starting from the station or
+     * Top 5 most popular departure stations for journeys ending at the station, depending on the given parameter
+     * @param location
+     * @return return a string with the 5 top location
+     */
     @GetMapping("/public/popular/{location}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public String popular(@PathVariable(value = "location") String location) {
         return bikeJourneyService.popular(location).toString();
     }
-
-
-
-
-
-
-
-
-
 
     /**
      * auth and token generation
      * @param authenticationReq (user and password from client)
      * @return generated token information
      */
+
     @PostMapping("/public/authenticate")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<TokenInfo> authenticate(@RequestBody AuthenticationReq authenticationReq) {
         System.out.println("authenticate user" + authenticationReq.getUser());
 
