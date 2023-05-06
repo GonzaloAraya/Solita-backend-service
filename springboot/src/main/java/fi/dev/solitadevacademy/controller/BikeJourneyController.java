@@ -128,6 +128,33 @@ public class BikeJourneyController {
         return bikeJourneyService.average(location, place);
     }
 
+
+
+
+
+
+    /*
+     *
+     *Top 5 most popular return stations for journeys starting from the station
+     *Top 5 most popular departure stations for journeys ending at the station
+     *
+     *
+     * */
+
+    @GetMapping("/public/popular/{location}")
+    public String popular(@PathVariable(value = "location") String location) {
+        return bikeJourneyService.popular(location).toString();
+    }
+
+
+
+
+
+
+
+
+
+
     /**
      * auth and token generation
      * @param authenticationReq (user and password from client)
