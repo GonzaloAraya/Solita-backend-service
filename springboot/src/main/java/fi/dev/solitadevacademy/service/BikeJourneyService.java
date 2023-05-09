@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,18 +82,7 @@ public class BikeJourneyService {
      * @return average distance of a journey ending at the station
      */
     private String returnAvg(List<BikeJourney> bikeJourneys, String place) {
-        Integer totalDistance = 0;
-        Integer counter = 0;
-        Integer avg;
-        for (int i = 0; i < bikeJourneys.size(); i++) {
-            if (bikeJourneys.get(i).getReturnStationName().equalsIgnoreCase(place)) {
-                totalDistance += bikeJourneys.get(i).getCoveredDistance();
-                counter++;
-            }
-        }
-        if(counter == 0) return "place not found";
-        avg = totalDistance / counter;
-        return avg + ":" + counter;
+        return bikeJourneyRepository.returnAvg() + ":" + bikeJourneyRepository.returnCount();
     }
 
     /**
