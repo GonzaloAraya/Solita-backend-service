@@ -91,7 +91,7 @@ public class BikeJourneyService {
         }
         if(counter == 0) return "place not found";
         avg = totalDistance / counter;
-        return avg.toString();
+        return avg + ":" + counter;
     }
 
     /**
@@ -112,7 +112,7 @@ public class BikeJourneyService {
         }
         if(counter == 0) return "place not found";
         avg = totalDistance / counter;
-        return avg.toString();
+        return avg + ":" + counter;
     }
 
     /**
