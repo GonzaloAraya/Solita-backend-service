@@ -1,6 +1,8 @@
 # Solita-backend-service
+This project is a backend server built with Spring Boot, a Java-based web application framework, and utilizes MariaDB, an open-source relational database management system, for efficient data storage and retrieval.
+The project has been deployed in a VM cloud environment using Docker on a Linux operating system.
 
-services examples:
+Services examples:
 
 ## CRUD 
 
